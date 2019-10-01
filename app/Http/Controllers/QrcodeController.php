@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Qrcode;
 use Illuminate\Http\Request;
 
 class QrcodeController extends Controller
@@ -34,7 +34,10 @@ class QrcodeController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        Qrcode::create($request->all());
+        return json_encode(array(
+            "statusCode"=>200
+        ));
     }
 
     /**

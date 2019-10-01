@@ -16,6 +16,7 @@
         -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
         box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
     }
+
     .scanner-laser {
         position: absolute;
         margin: 40px;
@@ -68,8 +69,7 @@
                 <div class="card-body">
 
                     <form id="qrcodeForm" name="qrcodeForm" method="POST" action="{{ route('peserta.store') }}">
-                        @csrf
-                        <input autofocus="autofocus" type="text" class="qrcode" name="qrcode" id="qrcode" />
+                        <input autofocus="autofocus" type="hidden" class="qrcode" name="qrcode" id="qrcode" />
                     </form>
                     <select class="form-control" id="Camera" onchange="getCamera(this)">
                         <option value="">Pilih Camera</option>
@@ -111,51 +111,60 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
 
-<!-- <script type="text/javascript">
-    $(function() {
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-center',
-            showConfirmButton: false,
-            timer: 3000
-        });
-
-        $('.toastrDefaultSuccess').click(function() {
-            toastr.success('Lorem ipsum dolor sit amet, consetetur sadipscing elitr.')
-        });
-        $('.toastrDefaultInfo').click(function() {
-            toastr.info('Lorem ipsum dolor sit amet, consetetur sadipscing elitr.')
-        });
-        $('.toastrDefaultError').click(function() {
-            toastr.error('Lorem ipsum dolor sit amet, consetetur sadipscing elitr.')
-        });
-        $('.toastrDefaultWarning').click(function() {
-            toastr.warning('Lorem ipsum dolor sit amet, consetetur sadipscing elitr.')
-        });
-    });
-
-</script> -->
-
 <script type="text/javascript">
-  let scanner = new Instascan.Scanner({ video: document.getElementById('preview'),backgroundScan:true, continuous: true, mirror:false });
-      //let scanner = new Instascan.Scanner({ video: document.getElementById('my_camera_qr_video'),backgroundScan:true, continuous: true, mirror:false);
-      scanner.addListener('scan', function (content) {
+    function insertData() {
+        var qrcode = $('#qrcode').val();
+        var CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
+        if (qrcode != "") {
+            //   $("#butsave").attr("disabled", "disabled");
+            $.ajax({
+                url: "{{ route('peserta.store') }}",
+                type: "POST",
+                data: {
+                    _token: CSRF_TOKEN,
+                    type: 1,
+                    qrcode: qrcode,
+                },
+                cache: false,
+                success: function(dataResult) {
+                    console.log(dataResult);
+                    var dataResult = JSON.parse(dataResult);
+                    if (dataResult.statusCode == 200) {
+                        toastr.success('Absen Berhasil');
+                    } 
+                },
+                error: function(dataResult) {
+                        toastr.info('Anda Sudah Absen');
+                }
+            });
+        } else {
+            alert('Please fill all the field !');
+        }
+        //toastr.success('Success');
+    }
+    let scanner = new Instascan.Scanner({
+        video: document.getElementById('preview'),
+        backgroundScan: true,
+        continuous: true,
+        mirror: false
+    });
+    //let scanner = new Instascan.Scanner({ video: document.getElementById('my_camera_qr_video'),backgroundScan:true, continuous: true, mirror:false);
+    scanner.addListener('scan', function(content) {
         document.getElementById('qrcode').value = content;
-        document.getElementById('qrcodeForm').submit();
-        //toastr.success('form disubmit');
+        insertData();
     });
 
-      function getCamera(selectObject) {
+    function getCamera(selectObject) {
         var value = selectObject.value;
-        Instascan.Camera.getCameras().then(function (cameras) {
+        Instascan.Camera.getCameras().then(function(cameras) {
             if (cameras.length > 0) {
                 scanner.start(cameras[value]);
             } else {
-              console.error('No cameras found.');
-          }
-      }).catch(function (e) {
-        console.error(e);
-    });
-  }
+                console.error('No cameras found.');
+            }
+        }).catch(function(e) {
+            console.error(e);
+        });
+    }
 </script>
 @endpush
