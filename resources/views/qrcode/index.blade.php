@@ -70,7 +70,6 @@
                     <form id="qrcodeForm" name="qrcodeForm" method="POST" action="{{ route('peserta.store') }}">
                         @csrf
                         <input autofocus="autofocus" type="text" class="qrcode" name="qrcode" id="qrcode" />
-                        <input type="submit" name="submit" id="action" class="btn btn-info" />
                     </form>
                     <select class="form-control" id="Camera" onchange="getCamera(this)">
                         <option value="">Pilih Camera</option>
@@ -142,7 +141,7 @@
       //let scanner = new Instascan.Scanner({ video: document.getElementById('my_camera_qr_video'),backgroundScan:true, continuous: true, mirror:false);
       scanner.addListener('scan', function (content) {
         document.getElementById('qrcode').value = content;
-        document.forms['qrcodeForm'].submit();
+        document.getElementById('qrcodeForm').submit();
         //toastr.success('form disubmit');
     });
 
