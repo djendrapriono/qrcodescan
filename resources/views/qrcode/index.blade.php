@@ -16,7 +16,6 @@
         -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
         box-shadow: inset 0 1px 1px rgba(0, 0, 0, .05);
     }
-
     .scanner-laser {
         position: absolute;
         margin: 40px;
@@ -24,28 +23,24 @@
         width: 30px;
         opacity: 0.5;
     }
-
     .laser-leftTop {
         top: 0;
         left: 0;
         border-top: solid red 3px;
         border-left: solid red 3px;
     }
-
     .laser-leftBottom {
         bottom: 0;
         left: 0;
         border-bottom: solid red 3px;
         border-left: solid red 3px;
     }
-
     .laser-rightTop {
         top: 0;
         right: 0;
         border-top: solid red 3px;
         border-right: solid red 3px;
     }
-
     .laser-rightBottom {
         bottom: 0;
         right: 0;
@@ -102,13 +97,8 @@
 <script src="{{ asset('AdminLTE/plugins/sweetalert2/sweetalert2.min.js') }}"></script>
 <!-- Toastr -->
 <script src="{{ asset('AdminLTE/plugins/toastr/toastr.min.js') }}"></script>
-<!-- AdminLTE App -->
-<script src="{{ asset('AdminLTE/dist/js/adminlte.min.js') }}"></script>
-<!-- AdminLTE for demo purposes -->
-<script src="{{ asset('AdminLTE/dist/js/demo.js') }}"></script>
 
 <!-- Qrcode -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
 
 <script type="text/javascript">
@@ -134,6 +124,7 @@
                     } 
                 },
                 error: function(dataResult) {
+                    console.log(dataResult);
                         toastr.info('Anda Sudah Absen');
                 }
             });
@@ -153,7 +144,6 @@
         document.getElementById('qrcode').value = content;
         insertData();
     });
-
     function getCamera(selectObject) {
         var value = selectObject.value;
         Instascan.Camera.getCameras().then(function(cameras) {
