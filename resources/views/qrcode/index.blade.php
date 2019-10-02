@@ -58,20 +58,19 @@
                 <div class="card-header">
                     <h3 class="card-title">
                         <i class="fas fa-edit"></i>
-                        Toastr Examples
+                        Scan Qrcode
                     </h3>
                 </div>
                 <div class="card-body">
 
                     <form id="qrcodeForm" name="qrcodeForm" method="POST" action="{{ route('peserta.store') }}">
-                        <input autofocus="autofocus" type="hidden" class="qrcode" name="qrcode" id="qrcode" />
+                        <input type="hidden" autofocus="autofocus" type="hidden" class="qrcode" name="qrcode" id="qrcode" />
                     </form>
-                    <select class="form-control" id="Camera" onchange="getCamera(this)">
-                        <option value="">Pilih Camera</option>
-                        <option value="0">Camera Depan</option>
-                        <option value="1">Camera Belakang</option>
-                    </select>
-                    <br>
+                    <div class="alert alert-success">
+                        <strong>Success!</strong> 
+                        <br>This alert box could indicate a successful or positive action.
+                    </div>
+                    <audio id="audio" src="{{ asset('beep.wav') }}" autoplay="false" ></audio>
                     <div class="well" style="position: relative;display: inline-block;">
                         <video width="100%" height="100%" id="preview"></video>
                         <div class="scanner-laser laser-rightBottom" style="opacity: 0.5;"></div>
@@ -79,15 +78,32 @@
                         <div class="scanner-laser laser-leftBottom" style="opacity: 0.5;"></div>
                         <div class="scanner-laser laser-leftTop" style="opacity: 0.5;"></div>
                     </div>
-                    <br>
+                    <div class="text-left">
+                        <span class="badge bg-warning ">Zoom</span>
+                        <input class="form-control" type="range" id="qrCodeZoomSlider" min="0" max="0" />
+                    </div>
+                    <div class="row justify-content-center">
+                        <div class="text-center">
+                            <a class="btn btn-app bg-success " onclick="frontCamera()" value="0">
+                              <span class="badge bg-warning ">Front</span>
+                              <i class="fas fa-qrcode"></i>Camera
+                          </a>
 
-                </div>
-                <!-- /.card -->
-            </div>
-        </div>
-        <!-- /.col -->
-    </div>
-    <!-- ./row -->
+                          <a class="btn btn-app bg-info" onclick="backCamera()" value="1">
+                              <span class="badge bg-danger ">Back</span>
+                              <i class="fas fa-qrcode"></i>Camera
+                          </a>
+                      </div>
+                  </div>
+                  <br>
+
+              </div>
+              <!-- /.card -->
+          </div>
+      </div>
+      <!-- /.col -->
+  </div>
+  <!-- ./row -->
 </div><!-- /.container-fluid -->
 
 @stop
@@ -99,9 +115,10 @@
 <script src="{{ asset('AdminLTE/plugins/toastr/toastr.min.js') }}"></script>
 
 <!-- Qrcode -->
-<script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
+<script src="{{ asset('instascan.min.js') }}"></script>
 
 <script type="text/javascript">
+
     function insertData() {
         var qrcode = $('#qrcode').val();
         var CSRF_TOKEN = $('meta[name="csrf-token"]').attr('content');
@@ -112,7 +129,7 @@
                 type: "POST",
                 data: {
                     _token: CSRF_TOKEN,
-                    type: 1,
+                    type: JSON,
                     qrcode: qrcode,
                 },
                 cache: false,
@@ -120,12 +137,13 @@
                     console.log(dataResult);
                     var dataResult = JSON.parse(dataResult);
                     if (dataResult.statusCode == 200) {
+                        document.getElementById.
                         toastr.success('Absen Berhasil');
                     } 
                 },
                 error: function(dataResult) {
                     console.log(dataResult);
-                        toastr.info('Anda Sudah Absen');
+                    toastr.info('Anda Sudah Absen');
                 }
             });
         } else {
@@ -142,19 +160,97 @@
     //let scanner = new Instascan.Scanner({ video: document.getElementById('my_camera_qr_video'),backgroundScan:true, continuous: true, mirror:false);
     scanner.addListener('scan', function(content) {
         document.getElementById('qrcode').value = content;
+        var sound = document.getElementById("audio");
+        sound.play();
         insertData();
     });
-    function getCamera(selectObject) {
-        var value = selectObject.value;
+    function frontCamera(selectObject) {
+        //var value = selectObject.value;
         Instascan.Camera.getCameras().then(function(cameras) {
             if (cameras.length > 0) {
-                scanner.start(cameras[value]);
-            } else {
-                console.error('No cameras found.');
-            }
-        }).catch(function(e) {
-            console.error(e);
-        });
-    }
-</script>
-@endpush
+                scanner.start(cameras[0]);
+                var camera_index = 0;
+                    // Reference to input slider
+                    var zoomSlider = document.getElementById('qrCodeZoomSlider');
+                    // Hide the slider until it is ready
+                    //zoomSlider.style.display = 'none';
+                    // Timeout needed in Chrome, see https://crbug.com/711524
+                    // 2-seconds should be way enough, 500-milliseconds might be too
+                    setTimeout(() => {
+                    // Get the vieo track
+                    var videoTrack = cameras[camera_index]._stream.getVideoTracks()[0];
+                    // No video track found, cancel zoom support
+                    if (videoTrack == null) {
+                        return;
+                    }
+                    // Get capabilities from the camera
+                    const capabilities = videoTrack.getCapabilities();
+                    // No zoom support, cancel
+                    if (!capabilities.zoom) {
+                        return;
+                    }
+                    // Set slider properties based on camera capabilities
+                    zoomSlider.min = capabilities.zoom.min;
+                    zoomSlider.max = capabilities.zoom.max;
+                    zoomSlider.step = capabilities.zoom.step;
+                    zoomSlider.value = videoTrack.getSettings().zoom;
+                    // On slider change, update camera zoom
+                    zoomSlider.oninput = function() {
+                        videoTrack.applyConstraints({advanced : [{zoom: zoomSlider.value}] });
+                    };
+                    // Ready to show slider
+                    zoomSlider.style.display = '';
+                }, 2000);
+                } else {
+                    console.error('No cameras found.');
+                }
+            }).catch(function(e) {
+                console.error(e);
+            });
+        }
+
+        function backCamera(selectObject) {
+            Instascan.Camera.getCameras().then(function(cameras) {
+                if (cameras.length > 0) {
+                    scanner.start(cameras[1]);
+                    var camera_index = 1;
+                    // Reference to input slider
+                    var zoomSlider = document.getElementById('qrCodeZoomSlider');
+                    // Hide the slider until it is ready
+                    //zoomSlider.style.display = 'none';
+                    // Timeout needed in Chrome, see https://crbug.com/711524
+                    // 2-seconds should be way enough, 500-milliseconds might be too
+                    setTimeout(() => {
+                    // Get the vieo track
+                    var videoTrack = cameras[camera_index]._stream.getVideoTracks()[0];
+                    // No video track found, cancel zoom support
+                    if (videoTrack == null) {
+                        return;
+                    }
+                    // Get capabilities from the camera
+                    const capabilities = videoTrack.getCapabilities();
+                    // No zoom support, cancel
+                    if (!capabilities.zoom) {
+                        return;
+                    }
+                    // Set slider properties based on camera capabilities
+                    zoomSlider.min = capabilities.zoom.min;
+                    zoomSlider.max = capabilities.zoom.max;
+                    zoomSlider.step = capabilities.zoom.step;
+                    zoomSlider.value = videoTrack.getSettings().zoom;
+                    // On slider change, update camera zoom
+                    zoomSlider.oninput = function() {
+                        videoTrack.applyConstraints({advanced : [{zoom: zoomSlider.value}] });
+                    };
+                    // Ready to show slider
+                    zoomSlider.style.display = '';
+                }, 2000);
+                } else {
+                    console.error('No cameras found.');
+                }
+            }).catch(function(e) {
+                console.error(e);
+            });
+        }
+    </script>
+    @endpush
