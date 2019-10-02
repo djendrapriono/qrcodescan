@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Qrcode;
 use Illuminate\Http\Request;
 
@@ -34,10 +35,17 @@ class QrcodeController extends Controller
      */
     public function store(Request $request)
     {
-        Qrcode::create($request->all());
-        return json_encode(array(
-            "statusCode"=>200
-        ));
+        $request->validate([
+            'qrcode' => 'unique:qrcode|required',
+        ]);
+        $qrcode = new Qrcode;
+        $qrcode->qrcode = $request->qrcode;
+        if ($request->validate == true) {
+            $qrcode->save();
+            return response()->json(['code' => 200, 'success' => 'Hooray'], 200);
+        } else {
+            return response()->json(['code' => 442, 'success' => 'Not Hooray'], 442);
+        };
     }
 
     /**
